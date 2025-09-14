@@ -1,0 +1,21 @@
+TICKER,INDEXNAME,SOURCEDURATION,first_daily,last_daily,daily_rows,num_periods,max_abs_error,contiguous_daily
+ADBE,Global Transaction Index,Custom Quarter,2016-06-04,2025-08-30,3375,37,8.881784197001252e-15,True
+ADBE,Global Transaction Index,Month,2019-01-01,2025-09-01,2436,80,4.440892098500626e-15,True
+ADBE,Global Transaction Index (Legacy),Month,2016-03-01,2025-09-01,3472,114,4.440892098500626e-15,True
+DASH,Global New Store Index,Month,2018-01-01,2025-09-01,2801,92,2.1316282072803006e-14,True
+DASH,Global New Store Index,Quarter,2017-12-31,2025-07-01,2740,30,2.842170943040401e-14,True
+DASH,Global Order Index,Month,2018-01-01,2025-09-01,2801,92,4.263256414560601e-14,True
+DASH,Global Order Index,Quarter,2017-12-31,2025-07-01,2740,30,5.684341886080802e-14,True
+DASH,Global Order Index,Week,2019-01-01,2025-09-02,2437,348,3.552713678800501e-15,True
+FVRR,Global Transaction Index,Mid-month,2018-03-16,2025-08-16,2711,89,3.3306690738754696e-15,True
+FVRR,Global Transaction Index,Month,2018-03-31,2025-09-01,2712,89,3.552713678800501e-15,True
+FVRR,Global Transaction Index,Quarter,2018-04-01,2025-07-01,2649,29,1.0658141036401503e-14,True
+FVRR,Global Transaction Index,Year,2018-12-31,2025-07-01,2375,26,1.4210854715202004e-14,True
+MELI,Mercado Libre Transaction Index,Mid-month,2018-03-16,2025-06-16,2650,87,3.1086244689504383e-15,True
+MELI,Mercado Libre Transaction Index,Month,2018-03-31,2025-09-01,2712,89,4.440892098500626e-15,True
+MELI,Mercado Libre Transaction Index,Quarter,2018-04-01,2025-07-01,2649,29,1.0658141036401503e-14,True
+MELI,Mercado Libre Transaction Index,Week,2023-04-04,2025-09-02,883,126,8.881784197001252e-16,True
+MELI,Mercado Pago Transaction Index,Mid-month,2021-03-16,2025-06-16,1554,51,3.1086244689504383e-15,True
+MELI,Mercado Pago Transaction Index,Month,2021-03-31,2025-09-01,1616,53,3.552713678800501e-15,True
+MELI,Mercado Pago Transaction Index,Quarter,2021-04-01,2025-07-01,1553,17,8.881784197001252e-15,True
+MELI,Mercado Pago Transaction Index,Week,2023-04-04,2025-09-02,883,126,8.881784197001252e-16,True

@@ -1,0 +1,8 @@
+TICKER,INDEXNAME,ASOFDATE,QUARTER_START,QUARTER_END,DAYS_ELAPSED,DAYS_IN_QUARTER,QTD,FORECAST,SOURCEDURATION,METHOD
+ADBE,Global Transaction Index,2025-09-02,2025-07-01,2025-09-30,64,92,11.166,16.051,Month,avg_daily_extrapolation
+ADBE,Global Transaction Index (Legacy),2025-09-02,2025-07-01,2025-09-30,64,92,11.047,15.88,Month,avg_daily_extrapolation
+DASH,Global New Store Index,2025-09-02,2025-07-01,2025-09-30,64,92,60.658,87.196,Month,avg_daily_extrapolation
+DASH,Global Order Index,2025-09-02,2025-07-01,2025-09-30,64,92,159.766,229.663,Month,avg_daily_extrapolation
+FVRR,Global Transaction Index,2025-09-02,2025-07-01,2025-09-30,64,92,3.779,5.432,Month,avg_daily_extrapolation
+MELI,Mercado Libre Transaction Index,2025-09-02,2025-07-01,2025-09-30,64,92,15.798,22.71,Month,avg_daily_extrapolation
+MELI,Mercado Pago Transaction Index,2025-09-02,2025-07-01,2025-09-30,64,92,18.374,26.412,Month,avg_daily_extrapolation

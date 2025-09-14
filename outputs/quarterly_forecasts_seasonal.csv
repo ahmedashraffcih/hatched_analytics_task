@@ -1,0 +1,8 @@
+TICKER,INDEXNAME,ASOFDATE,QUARTER_START,QUARTER_END,DAYS_ELAPSED,DAYS_IN_QUARTER,QTD,FORECAST,SOURCEDURATION,METHOD
+ADBE,Global Transaction Index,2025-09-02,2025-07-01,2025-09-30,64,92,11.166,16.349,Month,seasonality_vs_last_year
+ADBE,Global Transaction Index (Legacy),2025-09-02,2025-07-01,2025-09-30,64,92,11.047,16.145,Month,seasonality_vs_last_year
+DASH,Global New Store Index,2025-09-02,2025-07-01,2025-09-30,64,92,60.658,91.221,Month,seasonality_vs_last_year
+DASH,Global Order Index,2025-09-02,2025-07-01,2025-09-30,64,92,159.766,231.511,Month,seasonality_vs_last_year
+FVRR,Global Transaction Index,2025-09-02,2025-07-01,2025-09-30,64,92,3.779,5.467,Month,seasonality_vs_last_year
+MELI,Mercado Libre Transaction Index,2025-09-02,2025-07-01,2025-09-30,64,92,15.798,22.796,Month,seasonality_vs_last_year
+MELI,Mercado Pago Transaction Index,2025-09-02,2025-07-01,2025-09-30,64,92,18.374,27.208,Month,seasonality_vs_last_year
