@@ -1,4 +1,4 @@
-# src/interpolation.py - Daily allocation logic
+# src/daily_allocation.py - Daily allocation logic
 import pandas as pd
 from typing import List
 import warnings
@@ -16,7 +16,8 @@ Key points:
 - CUMULATIVEVALUE is a global running sum over emitted daily VALUEs
 """
 
-
+# What it does: When a series’ first anchor has no previous anchor, I need a start date.
+# Why: Makes the “first interval” explicit and reviewable. It’s conservative and calendar-aware.
 def _duration_backfill_start(duration: str, anchor: pd.Timestamp) -> pd.Timestamp:
     """
     Compute the start date for the first backfilled window, based on duration.
@@ -67,12 +68,14 @@ def convert_to_daily(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame(columns=["TICKER", "INDEXNAME", "DURATION", "PERIODEND", "VALUE"])
 
-    df_local = df.copy()  # work on a copy to avoid mutating caller's DataFrame
+    # work on a copy to avoid mutating caller's DataFrame
+    df_local = df.copy()  
     
     # Normalize PERIODEND to date (midnight) for robust comparisons/joins
     df_local["PERIODEND"] = pd.to_datetime(df_local["PERIODEND"]).dt.normalize()
 
     daily_frames: List[pd.DataFrame] = []
+
     # Process each source series independently; do NOT mix durations
     for (ticker, indexname, duration), grp in df_local.groupby(["TICKER", "INDEXNAME", "DURATION"], dropna=False):
         # Inline minimal validation
@@ -85,29 +88,33 @@ def convert_to_daily(df: pd.DataFrame) -> pd.DataFrame:
         if not grp["VALUE"].notna().any():
             warnings.warn(f"No non-null values for {ticker}/{indexname}/{duration}")
             continue
-        # Build clean, ordered anchors and period values (keep last per date)
+
+        # Build clean, ordered anchors and period values
         grp_sorted = grp.sort_values("PERIODEND").copy()
         grp_sorted["PERIODEND"] = pd.to_datetime(grp_sorted["PERIODEND"]).dt.normalize()
         
-        # keep last VALUE per day to avoid duplicate anchors on same date
-        last_per_date = grp_sorted.groupby("PERIODEND", as_index=True).tail(1)
-        last_per_date = last_per_date.sort_values("PERIODEND")
-        anchor_dates = list(last_per_date["PERIODEND"])  # ordered anchor dates
-        raw_values = list(last_per_date["VALUE"].astype(float).values)  # period totals aligned to anchors
+        # Data processor already handled duplicates by RELEASEDDATE, so we can trust the data
+        anchor_dates = list(grp_sorted["PERIODEND"])  # ordered anchor dates
+        raw_values = list(grp_sorted["VALUE"].astype(float).values)  # period totals aligned to anchors
+        
         if len(anchor_dates) == 0:
             continue
 
         # Backfill start: duration-driven, reviewable defaults
+        ## Creates a daily grid from the first day of the first anchor to the last day of the last anchor.
         a0 = anchor_dates[0]
         first_start = _duration_backfill_start(duration, a0)
         start_date = first_start
         end_date = anchor_dates[-1]
         daily_index = pd.date_range(start=start_date, end=end_date, freq="D")  # full daily grid
 
-        # Allocate per interval (including first backfilled) so sums match period VALUEs exactly
-        daily_value = pd.Series(0.0, index=daily_index)  # container for per-day allocations
+        # Pre-allocate a zero-filled daily series; we’ll overwrite windows with per-day amounts.
+        daily_value = pd.Series(0.0, index=daily_index)
+
         # First interval: (first_start, first_anchor]
-        # Allocate uniformly so that the sum equals raw_values[0]
+        ## Compute number of days in the window.
+        ## Compute per-day allocation as period_total / num_days.
+        ## Write the values into the daily series exactly over that range.
         if len(anchor_dates) >= 1 and len(raw_values) >= 1:
             prev_date = first_start
             curr_date = anchor_dates[0]
@@ -117,8 +124,7 @@ def convert_to_daily(df: pd.DataFrame) -> pd.DataFrame:
                 window = pd.date_range(prev_date + pd.offsets.Day(1), curr_date, freq="D")  # exclusive start, inclusive end
                 daily_value.loc[window] = per_day  # write first interval
         
-        # Subsequent intervals: (prev, curr]
-        # Always prefer the reported period VALUE; fall back to cumulative delta only if needed
+        # For each subsequent anchor, allocate the reported period total over the calendar days between previous and current anchors.
         for i in range(1, len(anchor_dates)):
             prev_date = anchor_dates[i - 1]
             curr_date = anchor_dates[i]
@@ -133,7 +139,7 @@ def convert_to_daily(df: pd.DataFrame) -> pd.DataFrame:
         # Global running cumulative (not period-to-date)
         cumulative_daily = daily_value.cumsum()  # global running sum over emitted daily values
 
-        # Emit the daily rows for this source series with lineage preserved
+        # Emit per-day rows for this series with lineage (“SOURCEDURATION”)
         out = pd.DataFrame(
             {
                 "TICKER": ticker,
@@ -149,12 +155,12 @@ def convert_to_daily(df: pd.DataFrame) -> pd.DataFrame:
 
         daily_frames.append(out)
 
+    # Concatenate all series outputs into one daily dataset (or return empty schema)
     result = pd.concat(daily_frames, ignore_index=True) if daily_frames else pd.DataFrame(columns=["TICKER", "INDEXNAME", "DURATION", "PERIODEND", "VALUE"])
     if result.empty:
         return result
 
-    # Keep sources separate (no cross-duration collapse). Sort for readability.
+    # Sort and project columns to keep outputs predictable/readable
     result = result.sort_values(["TICKER", "INDEXNAME", "SOURCEDURATION", "PERIODEND"]).reset_index(drop=True)
-    # Reorder columns (include SOURCEDURATION for lineage visibility)
     result = result[["TICKER", "DURATION", "PERIODEND", "INDEXNAME", "VALUE", "CUMULATIVEVALUE", "SOURCEDURATION"]]
     return result
