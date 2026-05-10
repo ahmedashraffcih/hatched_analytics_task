@@ -1,6 +1,47 @@
-# Hatched Analytics – Data Engineering Task
+# Mixed-Frequency Index Data → Daily Reconciliation + Quarterly Forecasting
 
-## Table of Contents
+A Python data-engineering pipeline that converts mixed-frequency (week / month / quarter) financial index data into a reconciled daily dataset, then produces mid-quarter quarterly forecasts using avg-daily and seasonal methods. **Lineage-preserving, exactly-reconciling, deterministic** — the daily output sums back to the source period to floating-point tolerance, and every daily value can be traced to its exact source granularity.
+
+> **About this project**
+> Originally built as a take-home interview task for [Hatched Analytics](https://www.hatchedanalytics.com/) (alternative-data provider for institutional investors). Maintained as a portfolio piece demonstrating production-grade data-engineering practices: explicit auditability over theoretical elegance, exact reconciliation guarantees, and edge-case handling for revisions and duplicates.
+
+## Data flow
+
+```mermaid
+flowchart LR
+    Input[("data/index.csv<br/>Mixed-frequency<br/>Week / Month / Quarter")]
+
+    subgraph Pipeline["pipeline.py — single Python process"]
+        direction TB
+        DP["data_processor.py<br/>Loader · dedup · revisions"]
+        DA["daily_allocation.py<br/>Lineage-preserving allocation"]
+        FC["forecasting.py<br/>Avg-daily + Seasonal"]
+        DP --> DA
+        DP --> FC
+        DA --> FC
+    end
+
+    Input --> Pipeline
+    DA --> DailyOut[("outputs/daily_index.csv<br/>Reconciled daily series")]
+    FC --> QuarterOut[("outputs/quarterly_forecasts.csv<br/>QTD + forecast")]
+```
+
+## What this demonstrates
+
+For reviewers — the engineering signals worth a few minutes:
+
+- **Lineage preservation in time-series transformations.** Daily output retains `SOURCEDURATION`; no silent collapse across (week / month / quarter) granularities. Consumers pick which they trust.
+- **Exact reconciliation as a tested invariant.** Sum of daily values over the original window equals the source period's value to floating-point tolerance. Reconciliation isn't aspirational; it's verifiable.
+- **Two-method forecasting with explicit fallback.** Avg-daily extrapolation as a baseline; optional seasonal overlay using last year's intra-quarter pattern; clean fallback to avg-daily when last-year data is missing or zero.
+- **Edge-case handling that production data needs.** Revisions (latest by `RELEASEDDATE`), duplicate anchors (last wins), negatives (clipped to 0), mixed-frequency anchors with explicit windowing (`(prev, curr]` semantics).
+- **Reproducible Python pipeline.** Single CLI orchestrator, no notebooks in the production path, deterministic output for a given input.
+- **Minimal dependencies.** `pandas` + `numpy` only. Easier to deploy, fewer transitive risks, lower bus factor for setup.
+
+For the deeper rationale, see [Design Philosophy](#design-philosophy-why-this-approach) below.
+
+<details>
+<summary><b>Table of contents</b> (click to expand)</summary>
+
 - [Overview](#overview)
 - [Requirements](#requirements)
 - [Project structure](#project-structure)
@@ -15,11 +56,14 @@
 - [Design Philosophy](#design-philosophy-why-this-approach)
 - [Alternative approaches considered](#alternative-approaches-considered)
 
-## Overview
-This solution converts mixed‑frequency index data into a reconciled daily dataset and produces mid‑quarter quarterly estimates. 
-The design emphasizes accuracy, auditability, and clarity.
+</details>
 
-Deliverables
+## Overview
+
+This solution converts mixed‑frequency index data into a reconciled daily dataset and produces mid‑quarter quarterly estimates. The design emphasizes accuracy, auditability, and clarity.
+
+**Deliverables**
+
 - Daily CSV: `outputs/daily_index.csv`
 - Quarterly CSV(s): `outputs/quarterly_forecasts.csv` (avg‑daily) and optionally `outputs/quarterly_forecasts_seasonal.csv`
 - Well‑commented code and a single, simple CLI
